@@ -1,9 +1,26 @@
 <script setup>
-import { ref, computed, watch, Teleport } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, Teleport } from "vue";
 import { useApiFetch } from "~/composables/useApiFetch";
 import { useAuth } from "~/stores/Auth";
 import ActivityRaffleModal from "./ActivityRaffleModal.vue";
 import AttendeesModal from "./AttendeesModal.vue";
+
+const optionsMenuRef = ref(null);
+
+const handleClickOutside = (e) => {
+  if (!optionsMenuRef.value) return;
+  if (!optionsMenuRef.value.contains(e.target)) {
+    showOptionsMenu.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 
 const auth = useAuth();
 const config = useRuntimeConfig();
@@ -17,172 +34,293 @@ const props = defineProps({
   ArticleContent: String,
   DateTime: String,
   Location: String,
-  ActivityImg: String, // 🛠️ Added to match SQL: a.Activity_img AS ActivityImg
-  CreatedAt: String,   // 🛠️ Added to match SQL
+  ActivityImg: String,
+  CreatedAt: String,
   AttendingCount: Number,
   CommentCount: Number,
-  UserHasJoined: [Boolean, Number], // Handle SQL EXISTS returning 0/1
+  UserHasJoined: [Boolean, Number],
 });
 
 const emit = defineEmits(["refresh-feed"]);
 
-// ---------- Avatar & Banner Helpers ----------
-const backendBase = config.public.apiBaseUrl.replace("/api/v1", "");
-const getFullUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `${backendBase}${path}`;
-};
-
 // ---------- State ----------
-// Convert numeric 0/1 from SQL EXISTS to Boolean
 const userIsJoined = ref(!!props.UserHasJoined);
 const liveAttendingCount = ref(props.AttendingCount);
 const liveCommentCount = ref(props.CommentCount);
 
-watch(() => props.UserHasJoined, v => userIsJoined.value = !!v);
-watch(() => props.AttendingCount, v => liveAttendingCount.value = v);
-
-const isJoining = ref(false);
-const showComments = ref(false);
-const showAttendees = ref(false);
+const showRaffleModal = ref(false);
+const showAttendeesModal = ref(false); // Modal for all attendees
+const showCommentsSection = ref(false); // Inline section for comments
 const showOptionsMenu = ref(false);
+
 const attendees = ref([]);
 const comments = ref([]);
 const newCommentText = ref("");
+const isJoining = ref(false);
 
-// ---------- Handlers ----------
-const toggleAttendees = async () => {
-  showAttendees.value = !showAttendees.value;
-  if (showAttendees.value) attendees.value = await useApiFetch(`/activities/${props.id}/attendees`);
-};
+const toggleJoin = async () => {
+  if (isJoining.value) return;
+  isJoining.value = true;
 
-const toggleComments = async () => {
-  showComments.value = !showComments.value;
-  if (showComments.value && !comments.value.length) {
-    comments.value = (await useApiFetch(`/activities/${props.id}/comments`)).reverse();
+  // optimistic update
+  const previous = userIsJoined.value;
+  userIsJoined.value = !previous;
+  liveAttendingCount.value += userIsJoined.value ? 1 : -1;
+
+  try {
+    await useApiFetch(`/activities/${props.id}/join`, {
+      method: userIsJoined.value ? "POST" : "DELETE",
+    });
+  } catch (err) {
+    // rollback on failure
+    userIsJoined.value = previous;
+    liveAttendingCount.value += previous ? 1 : -1;
+  } finally {
+    isJoining.value = false;
   }
 };
 
-const joinActivity = async () => {
-  if (userIsJoined.value || isJoining.value) return;
-  isJoining.value = true;
-  try {
-    const res = await useApiFetch(`/activities/${props.id}/join`, { method: "POST" });
-    if (res.status === "success") {
-      userIsJoined.value = true;
-      liveAttendingCount.value++;
-    }
-  } finally { isJoining.value = false; }
+// ---------- Countdown Timer ----------
+const now = ref(new Date());
+let timer = null;
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = new Date();
+  }, 1000);
+});
+onUnmounted(() => clearInterval(timer));
+
+const countdownText = computed(() => {
+  const target = new Date(props.DateTime);
+  const diff = target - now.value;
+  if (diff <= 0) return "Happening Now";
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff / (1000 * 60)) % 60);
+  return `${hours}h ${mins}m left`;
+});
+
+// ---------- Handlers (Connected to your Backend) ----------
+
+const handleToggleAttendees = async () => {
+  showAttendeesModal.value = true;
+  // Calls GET /api/v1/activities/:id/attendees
+  const data = await useApiFetch(`/activities/${props.id}/attendees`);
+  attendees.value = data || [];
 };
 
-const leaveActivity = async () => {
-  if (!userIsJoined.value) return;
-  // 🛠️ Matches your new backend DELETE /join route
-  await useApiFetch(`/activities/${props.id}/join`, { method: "DELETE" });
-  userIsJoined.value = false;
-  liveAttendingCount.value = Math.max(0, liveAttendingCount.value - 1);
-};
-
-const handleHostAction = async () => {
-  if (!confirm("Are you sure you want to delete this activity?")) return;
-  try {
-    // 🛠️ Matches your backend DELETE /:id route
-    await useApiFetch(`/activities/${props.id}`, { method: "DELETE" });
-    emit("refresh-feed");
-  } catch (e) {
-    alert("Failed to delete activity");
+const handleToggleComments = async () => {
+  showCommentsSection.value = !showCommentsSection.value;
+  if (showCommentsSection.value) {
+    // Calls GET /api/v1/activities/:id/comments
+    const res = await useApiFetch(`/activities/${props.id}/comments`);
+    comments.value = res.data || [];
   }
 };
 
 const postComment = async () => {
   if (!newCommentText.value.trim()) return;
-  const res = await useApiFetch(`/activities/${props.id}/comment`, {
+  const res = await useApiFetch(`/activities/${props.id}/comments`, {
     method: "POST",
     body: { content: newCommentText.value },
   });
-  comments.value.unshift({
-    id: res.commentId,
-    user: auth.user?.nickname || "Me",
-    text: newCommentText.value,
-    avatar: getFullUrl(auth.user?.avatar_url),
-    time: "Just now",
-  });
-  liveCommentCount.value++;
-  newCommentText.value = "";
+  if (res.success) {
+    comments.value.unshift({
+      id: res.commentId,
+      user: auth.user?.nickname || "Me",
+      content: newCommentText.value,
+      avatar_url: auth.user?.avatar_url,
+      created_at: new Date().toISOString(),
+    });
+    liveCommentCount.value++;
+    newCommentText.value = "";
+  }
 };
 
-const formatDateTime = (iso) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+// ... keep joinActivity / leaveActivity as previously fixed ...
+
+const getFullUrl = (p) =>
+  p
+    ? p.startsWith("http")
+      ? p
+      : `${config.public.apiBaseUrl.replace("/api/v1", "")}${p}`
+    : null;
+const formatDateTime = (iso) =>
+  new Date(iso).toLocaleString("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 </script>
 
 <template>
-  <div class="w-full relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl shadow-2xl mb-8 text-white">
-    
-    <div v-if="ActivityImg" class="w-full h-48 overflow-hidden">
-        <img :src="getFullUrl(ActivityImg)" class="w-full h-full object-cover opacity-80" />
+  <div
+    class="activity-card relative overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2.5rem] mb-8 text-white transition-all hover:shadow-2xl"
+  >
+    <div v-if="ActivityImg" class="relative h-48 w-full overflow-hidden">
+      <img :src="getFullUrl(ActivityImg)" class="w-full h-full object-cover" />
+      <div
+        class="absolute top-4 left-4 bg-pink-500/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+      >
+        {{ countdownText }}
+      </div>
     </div>
 
-    <div class="p-6 space-y-4">
-      <div class="flex items-start justify-between border-b border-white/30 pb-4 mb-4">
-        <div class="flex items-center">
-          <div class="w-12 h-12 mr-3 overflow-hidden rounded-full border-2 border-white/20 shadow-lg bg-white/10">
-            <img v-if="getFullUrl(avatar_url)" :src="getFullUrl(avatar_url)" class="w-full h-full object-cover" />
-            <div v-else class="w-full h-full flex items-center justify-center font-bold">{{ Name?.charAt(0) }}</div>
-          </div>
+    <div class="p-8">
+      <div class="flex justify-between items-start mb-6">
+        <div class="flex items-center gap-4">
+          <img
+            :src="getFullUrl(avatar_url)"
+            class="w-12 h-12 rounded-2xl border border-white/20 object-cover"
+          />
           <div>
-            <h2 class="text-xl font-bold">{{ ArticleTitle }}</h2>
-            <p class="text-sm text-white/70">Hosted by {{ Name }} • {{ formatDateTime(CreatedAt) }}</p>
+            <h2 class="text-2xl font-black tracking-tight">
+              {{ ArticleTitle }}
+            </h2>
+            <p class="text-xs opacity-60">
+              by {{ Name }} • {{ formatDateTime(CreatedAt) }}
+            </p>
           </div>
         </div>
 
-        <div class="relative">
-          <button @click="showOptionsMenu = !showOptionsMenu" class="p-2 hover:bg-white/10 rounded-full transition">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <div class="relative" ref="optionsMenuRef">
+          <button
+            @click="showOptionsMenu = !showOptionsMenu"
+            class="p-2 hover:bg-white/10 rounded-full transition"
+          >
+            <svg
+              class="w-6 h-6 opacity-50"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
+              />
+            </svg>
           </button>
 
-          <div v-if="showOptionsMenu" class="absolute right-0 mt-2 w-48 bg-indigo-900/95 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl py-2 z-50">
-            <button @click="showRaffleModal = true; showOptionsMenu = false" class="w-full text-left px-4 py-2 hover:bg-white/10 text-pink-300 font-bold">🎲 Open Raffle</button>
+          <div
+            v-if="showOptionsMenu"
+            class="absolute right-0 mt-2 w-48 bg-indigo-950/90 backdrop-blur-2xl border border-white/20 rounded-2xl p-2 z-50"
+          >
             <button
-              v-if="Number(auth.user?.userId) === Number(owner_id)"
-              @click="handleHostAction"
-              class="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 font-bold"
-            >🗑️ Delete Post</button>
+              @click="
+                showRaffleModal = true;
+                showOptionsMenu = false;
+              "
+              class="w-full text-left px-4 py-3 hover:bg-white/10 text-pink-300 font-bold rounded-xl flex items-center gap-2"
+            >
+              <span>🎲</span> Open Raffle
+            </button>
           </div>
         </div>
       </div>
 
-      <p class="text-white/90 leading-relaxed">{{ ArticleContent }}</p>
-
-      <div class="flex flex-col sm:flex-row gap-4 text-sm font-semibold text-white/80 border border-white/20 p-3 rounded-lg bg-white/10">
-          <div class="flex items-center"><span class="mr-2 text-pink-300">🗓️</span><span>{{ formatDateTime(DateTime) }}</span></div>
-          <div class="flex items-center"><span class="mr-2 text-pink-300">📍</span><span>{{ Location }}</span></div>
+      <p class="text-white/80 leading-relaxed mb-4">{{ ArticleContent }}</p>
+      <div class="flex items-center gap-2 text-sm font-bold opacity-70 mb-4">
+        <span>📍</span> {{ Location }}
+        <span>•</span>
+        <span>🗓️</span> {{ formatDateTime(DateTime) }}
       </div>
 
-      <div class="flex items-center justify-between mt-5">
-        <div class="flex space-x-3">
-          <button @click="toggleAttendees" class="flex items-center space-x-2 text-sm border border-white/20 rounded-full p-2 px-4 hover:bg-white/20 transition">
-            <span class="font-bold text-pink-300">{{ liveAttendingCount }}</span><span>attending</span>
+      <div
+        class="flex items-center justify-between border-t border-white/10 pt-4"
+      >
+        <div class="flex gap-6 mb-6">
+          <button
+            @click="handleToggleAttendees"
+            class="group flex items-center gap-2 border border-white/10 px-4 py-2 rounded-2xl w-auto h-auto"
+          >
+            <span
+              class="text-pink-400 font-black text-lg group-hover:scale-110 transition"
+              >{{ liveAttendingCount }}</span
+            >
+            <span
+              class="text-[10px] uppercase font-bold opacity-40 tracking-widest group-hover:scale-110 transition-transform"
+              >Attending</span
+            >
           </button>
-          <button @click="toggleComments" class="flex items-center space-x-2 text-sm border border-white/20 rounded-full p-2 px-4 hover:bg-white/20 transition">
-            <span class="font-bold text-pink-300">{{ liveCommentCount }}</span><span>comments</span>
+          <button
+            @click="handleToggleComments"
+            class="group flex items-center gap-2 border border-white/10 px-4 py-2 rounded-2xl w-auto h-auto"
+          >
+            <span
+              class="text-pink-400 font-black text-lg group-hover:scale-110 transition"
+              >{{ liveCommentCount }}</span
+            >
+            <span
+              class="text-[10px] uppercase font-bold opacity-40 tracking-widest group-hover:scale-110 transition-transform"
+              >Comments</span
+            >
           </button>
         </div>
-
-        <button 
+        <button
           v-if="Number(auth.user?.userId) !== Number(owner_id)"
-          @click="userIsJoined ? leaveActivity() : joinActivity()"
-          :class="['px-6 py-2 font-semibold rounded-full shadow-md transition',
-            userIsJoined ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 hover:bg-gray-200']"
+          @click="toggleJoin"
+          :disabled="isJoining"
+          :class="[
+            'px-8 py-3  rounded-2xl font-black text-xs transition-all active:scale-95 shadow-lg mb-6',
+            userIsJoined
+              ? 'bg-white/10 border border-white/20'
+              : 'bg-white text-indigo-900',
+          ]"
         >
-          {{ userIsJoined ? 'Leave Activity' : 'Join Activity' }}
+          {{ userIsJoined ? "Cancel RSVP" : "Join Activity" }}
         </button>
       </div>
-        
-      </div>
+
+      <transition name="slide-fade">
+        <div
+          v-if="showCommentsSection"
+          class="pt-6 space-y-6 border-t-2 border-white/5"
+        >
+          <div class="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            <div
+              v-for="c in comments"
+              :key="c.id"
+              class="flex gap-4 animate-in fade-in slide-in-from-bottom-2"
+            >
+              <img
+                :src="getFullUrl(c.avatar_url)"
+                class="w-10 h-10 rounded-xl bg-white/10"
+              />
+              <div
+                class="flex-1 bg-white/5 p-4 rounded-2xl border border-white/5"
+              >
+                <p class="font-black text-pink-300 text-[10px] mb-1 uppercase">
+                  {{ c.user }}
+                </p>
+                <p class="text-sm text-white/80">{{ c.content }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <input
+              v-model="newCommentText"
+              @keyup.enter="postComment"
+              placeholder="Add to the fluid conversation..."
+              class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+            />
+            <button
+              @click="postComment"
+              class="bg-pink-500 px-6 rounded-2xl font-bold text-xs"
+            >
+              Post
+            </button>
+          </div>
+        </div>
+      </transition>
+    </div>
+
+    <Teleport to="body">
+      <AttendeesModal
+        v-if="showAttendeesModal"
+        :attendees="attendees"
+        @close="showAttendeesModal = false"
+      />
+      <ActivityRaffleModal
+        v-if="showRaffleModal"
+        :activityId="id"
+        @close="showRaffleModal = false"
+      />
+    </Teleport>
   </div>
 </template>
-
-<style scoped>
-.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; max-height: 500px; }
-.slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; transform: translateY(-10px); max-height: 0; }
-</style>
