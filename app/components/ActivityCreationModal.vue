@@ -1,179 +1,187 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from "vue";
+import { useApiFetch } from "~/composables/useApiFetch";
 
-const emit = defineEmits(['close', 'post-activity']);
-import { useApiFetch } from '~/composables/useApiFetch';
+const emit = defineEmits(["close", "activityCreated"]);
 
+// --- State ---
+const modalRef = ref(null);
 const isPosting = ref(false);
 const postError = ref(null);
-// --- Form State ---
+const shakeModal = ref(false);
+
 const form = ref({
-    ArticleTitle: '',
-    ArticleContent: '',
-    DateTime: '', // Should be YYYY-MM-DDTHH:MM format for local datetime input
-    Location: '',
+  ArticleTitle: "",
+  ArticleContent: "",
+  DateTime: "",
+  Location: "",
 });
 
+// --- Mouse Parallax Logic (Matched to ActivityCard) ---
+const rotateX = ref(0);
+const rotateY = ref(0);
+const glowX = ref(0);
+const glowY = ref(0);
 
-const getMinDateTime = () => {
-    // Get current time in ISO format (YYYY-MM-DDTHH:MM)
-    const now = new Date();
-    
-    // Add a few minutes buffer to ensure the user can select the current time
-    now.setMinutes(now.getMinutes() + 5); 
-    
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+const handleMouseMove = (e) => {
+  if (!modalRef.value) return;
+  const { left, top, width, height } = modalRef.value.getBoundingClientRect();
+  const x = e.clientX - left;
+  const y = e.clientY - top;
+  
+  // Calculate subtle rotation
+  rotateY.value = ((x / width) - 0.5) * 6;  // Slightly less tilt than card for better usability
+  rotateX.value = ((y / height) - 0.5) * -6;
+  
+  glowX.value = x;
+  glowY.value = y;
 };
 
-const minDateTime = ref(getMinDateTime());
+const resetTransform = () => {
+  rotateX.value = 0;
+  rotateY.value = 0;
+};
 
+// --- Submission Logic ---
+const triggerShake = () => {
+  shakeModal.value = true;
+  setTimeout(() => (shakeModal.value = false), 500);
+};
 
-
-
-// --- Validation (Unchanged) ---
-const isFormValid = computed(() => {
-    return (
-        form.value.ArticleTitle.trim().length > 3 &&
-        form.value.ArticleContent.trim().length > 10 &&
-        form.value.DateTime.trim().length > 0 &&
-        form.value.Location.trim().length > 0 &&
-        // OPTIONAL: Basic check that selected date is not before now (though 'min' attribute handles this visually)
-        new Date(form.value.DateTime).getTime() > new Date().getTime() 
-    );
-});
-
-// --- Submission Handler (Unchanged) ---
 const handleSubmit = async () => {
-    if (!isFormValid.value) {
-        alert("Please fill in all required fields.");
-        return;
-    }
-    
-    isPosting.value = true;
-    postError.value = null;
-
-    // 1. Prepare data payload (ensure keys match what the Express API expects)
-    const payload = {
-        ArticleTitle: form.value.ArticleTitle.trim(),
-        ArticleContent: form.value.ArticleContent.trim(),
-        DateTime: form.value.DateTime.trim(), 
-        Location: form.value.Location.trim(),
-        // Note: Host ID and Status ID are handled securely by the backend (MOCK_CURRENT_USER_ID)
-    };
-    
-    try {
-        // 2. Make the API POST request using the useApiFetch utility
-        // This targets: POST http://localhost:3001/api/v1/activities
-        const response = await useApiFetch('/activities', {
-            method: 'POST',
-            body: payload,
-        });
-
-        // 3. Success Handling
-        console.log("Activity successfully posted:", response.activityId);
-        
-        // Notify the dashboard/parent component to refresh the activity feed
-        emit('activityCreated', response.activityId); 
-        
-        // Close the modal
-        emit('close');
-        
-    } catch (error) {
-        // 4. Error Handling
-        console.error("Activity Posting Failed:", error);
-        postError.value = 'Failed to create activity. Please check server logs.';
-        
-    } finally {
-        isPosting.value = false;
-    }
+  if (!isFormValid.value) { triggerShake(); return; }
+  isPosting.value = true;
+  try {
+    const response = await useApiFetch("/activities", {
+      method: "POST",
+      body: { ...form.value },
+    });
+    emit("activityCreated", response.activityId);
+    emit("close");
+  } catch (error) {
+    triggerShake();
+    postError.value = "Post failed. Try again.";
+  } finally { isPosting.value = false; }
 };
+
+const isFormValid = computed(() => 
+  form.value.ArticleTitle.length >= 3 && form.value.ArticleContent.length >= 10
+);
+const minDateTime = new Date().toISOString().slice(0, 16);
 </script>
 
 <template>
-    <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
-        
-        <div class="
-            bg-white/10 backdrop-blur-xl border border-white/20 
-            rounded-2xl shadow-2xl p-8 w-full max-w-2xl relative
-        ">
-            
-            <button @click="emit('close')" class="absolute top-4 right-4 text-white hover:text-pink-300 transition z-10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60"
+    @click.self="emit('close')"
+  >
+    <div
+      ref="modalRef"
+      class="modal-parallax-container"
+      @mousemove="handleMouseMove"
+      @mouseleave="resetTransform"
+    >
+      <div
+        class="modal-glass group"
+        :style="{ transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)` }"
+        :class="{ 'shake-active': shakeModal }"
+      >
+        <div 
+          class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          :style="{ background: `radial-gradient(800px circle at ${glowX}px ${glowY}px, rgba(236, 72, 153, 0.1), transparent 40%)` }"
+        ></div>
 
-            <h3 class="text-3xl font-extrabold text-white header-text-shadow mb-6">
-                Create New Activity
-            </h3>
-            
-            <form @submit.prevent="handleSubmit" class="space-y-6">
-                
-                <div>
-                    <label class="block text-white/80 font-semibold mb-2 post-text-shadow">Activity Title (What are you doing?)</label>
-                    <input v-model="form.ArticleTitle" type="text" placeholder="e.g., Weekend Coding Session"
-                        class="w-full p-3 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/70 focus:ring-pink-300 focus:outline-none focus:ring-2 transition"
-                        maxlength="60" required />
-                </div>
-                
-                <div>
-                    <label class="block text-white/80 font-semibold mb-2 post-text-shadow">Details / Content</label>
-                    <textarea v-model="form.ArticleContent" rows="4" placeholder="Describe the activity, requirements, and goal..."
-                        class="w-full p-3 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/70 focus:ring-pink-300 focus:outline-none focus:ring-2 transition"
-                        minlength="10" required></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-white/80 font-semibold mb-2 post-text-shadow">When is it?</label>
-                     <input v-model="form.DateTime" type="datetime-local" required
-                            :min="minDateTime"
-                            class="w-full p-3 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/70 focus:ring-pink-300 focus:outline-none focus:ring-2 transition" />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white/80 font-semibold mb-2 post-text-shadow">Where is it?</label>
-                        <input v-model="form.Location" type="text" placeholder="Online / Physical Location"
-                            class="w-full p-3 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/70 focus:ring-pink-300 focus:outline-none focus:ring-2 transition"
-                            required />
-                    </div>
-                </div>
-
-                <div class="pt-4 flex justify-end m-2 space-x-4">
-                    <button type="button" @click="emit('close')" class="btn-secondary px-8 py-3 font-bold rounded-full shadow-lg transition duration-300 transform bg-slate-600 hover:bg-slate-300">
-                        Cancel
-                    </button>
-                    <button type="submit" :disabled="!isFormValid"
-                        :class="[
-                            'px-8 py-3 font-bold rounded-full shadow-lg transition duration-300 transform btn-primary',
-                            isFormValid || isPosting
-                                ? 'bg-pink-300 text-indigo-900 hover:bg-pink-400 hover:scale-[1.02]'
-                                : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                        ]"
-                    >
-                       {{ isPosting ? 'Posting...' : 'Create Activity' }}
-                    </button>
-                </div>
-            </form>
+        <div class="mb-8 relative z-10">
+          <h3 class="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+            <span class="bg-gradient-to-tr from-pink-500 to-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+              ✨
+            </span>
+            Create New Activity
+          </h3>
+          <p class="text-slate-400 mt-2 text-sm font-medium uppercase tracking-widest">Broadcast you activity!</p>
         </div>
+
+        <form @submit.prevent="handleSubmit" class="space-y-6 relative z-10">
+          <div class="group/input">
+            <label class="input-label">Activity Title</label>
+            <input v-model="form.ArticleTitle" type="text" class="input-premium" required />
+          </div>
+
+          <div class="group/input">
+            <label class="input-label">Objective</label>
+            <textarea v-model="form.ArticleContent" rows="4" class="input-premium resize-none" required></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="group/input">
+              <label class="input-label">Schedule</label>
+              <input v-model="form.DateTime" type="datetime-local" :min="minDateTime" class="input-premium" required />
+            </div>
+            <div class="group/input">
+              <label class="input-label">Location</label>
+              <input v-model="form.Location" type="text" class="input-premium" required />
+            </div>
+          </div>
+
+          <div class="pt-6 flex items-center justify-end gap-4">
+            <button type="button" @click="emit('close')" class="cancel-btn">Cancel</button>
+            <button type="submit" :disabled="!isFormValid" class="create-btn">
+              {{ isPosting ? 'Posting...' : 'Launch Activity 🚀' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </template>
 
-<style scoped>
-/* Text Shadows (Important for visibility over the liquid glass) */
-.header-text-shadow {
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-}
-.post-text-shadow {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); 
+<style lang="postcss" scoped>
+/* Entry Animation for the Modal */
+.modal-parallax-container {
+  @apply w-full max-w-2xl transition-all duration-300 ease-out;
+  animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Ensure datetime-local input text is readable */
-input[type="datetime-local"] {
-    color-scheme: dark; /* Helps standardize input appearance on dark backgrounds */
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-glass {
+  @apply relative bg-slate-900/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl transition-transform duration-200 ease-out overflow-hidden;
+  will-change: transform;
+}
+
+.input-label {
+  @apply block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-2 transition-colors group-focus-within/input:text-pink-400;
+}
+
+.input-premium {
+  @apply w-full p-4 rounded-2xl border border-white/5 bg-slate-950/50 text-white outline-none transition-all;
+}
+
+.input-premium:focus {
+  @apply border-pink-500/50 ring-4 ring-pink-500/10;
+}
+
+.create-btn {
+  @apply px-10 py-4 font-black text-[10px] uppercase tracking-widest rounded-2xl bg-gradient-to-r from-pink-400 to-indigo-500 text-indigo-950 transition-all hover:scale-105 active:scale-95 disabled:opacity-50;
+}
+
+.cancel-btn {
+  @apply px-8 py-4 font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-white transition-colors;
+}
+
+/* Shake logic */
+.shake-active {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  @apply border-pink-500/50;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 </style>

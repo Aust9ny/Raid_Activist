@@ -3,20 +3,33 @@ import { ref, computed, onMounted, onUnmounted, watch, Teleport } from "vue";
 import { useActivities } from "~/composables/useActivities";
 import { useAnimatedBackground } from "~/composables/useAnimatedBackground";
 import { useApiFetch } from "~/composables/useApiFetch";
-import ActivityPost from "~/components/ActivityPost.vue";
-import ActivityCreationModal from "~/components/ActivityCreationModal.vue";
 import { useAuth } from "~/stores/Auth";
 
 const auth = useAuth();
 const config = useRuntimeConfig();
+const showToast = useToast();
 
-const userData = ref({
-  name: "",
-  profileImageUrl: "",
-});
+const userData = ref({ name: "", profileImageUrl: "" });
 
-// ---------- Fetch Me ----------
+// ---------- Scroll Logic ----------
+const scrollPercent = ref(0);
+const showBackToTop = ref(false);
+
+const updateScrollMetrics = () => {
+  const pixels = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  scrollPercent.value = (pixels / docHeight) * 100;
+
+  // Show button after 500px
+  showBackToTop.value = pixels > 500;
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 onMounted(async () => {
+  window.addEventListener("scroll", updateScrollMetrics);
   try {
     const me = await useApiFetch("/users/me");
     userData.value.name = me.nickname;
@@ -26,19 +39,15 @@ onMounted(async () => {
   }
 });
 
-// ---------- Avatar ----------
-const backendUrl = config.public.apiBaseUrl.replace("/api/v1", "");
-const getFullAvatarUrl = (path) =>
-  !path ? undefined : path.startsWith("http") ? path : `${backendUrl}${path}`;
+onUnmounted(() => window.removeEventListener("scroll", updateScrollMetrics));
 
-// ---------- Feed ----------
+// ---------- Search & Filter Logic ----------
 const searchQuery = ref("");
 const debouncedSearch = ref("");
 const activeFilter = ref("all");
-
-/* FIX #2: local debounce timer (no globals) */
 const searchTimer = ref(null);
 
+// Debounce search only
 watch(searchQuery, (v) => {
   clearTimeout(searchTimer.value);
   searchTimer.value = setTimeout(() => {
@@ -46,10 +55,8 @@ watch(searchQuery, (v) => {
   }, 400);
 });
 
-onUnmounted(() => {
-  clearTimeout(searchTimer.value);
-});
-
+// queryParams remains reactive; activeFilter triggers it instantly,
+// but debouncedSearch only updates after the timeout.
 const queryParams = computed(() => {
   const p = {};
   if (debouncedSearch.value?.trim()) p.search = debouncedSearch.value;
@@ -57,11 +64,10 @@ const queryParams = computed(() => {
   return p;
 });
 
-// ---------- Feed Data ----------
 const { activities, loading, error, refreshActivities } =
   useActivities(queryParams);
 
-// ---------- Background ----------
+// ---------- Background & Creation ----------
 const {
   dotPositions,
   ripples,
@@ -69,33 +75,44 @@ const {
   startAmbientGlow,
   stopAmbientGlow,
 } = useAnimatedBackground();
-
 onMounted(() => {
   document.addEventListener("click", handleBackgroundClick);
   startAmbientGlow();
 });
-
 onUnmounted(() => {
   document.removeEventListener("click", handleBackgroundClick);
   stopAmbientGlow();
 });
 
-// ---------- Modal ----------
+
 const showCreationModal = ref(false);
 
-const openCreationModal = () => {
-  showCreationModal.value = true;
-};
+watch(showCreationModal, (open) => {
+  if (open) {
+    document.removeEventListener("click", handleBackgroundClick);
+  } else {
+    document.addEventListener("click", handleBackgroundClick);
+  }
+});
+
 
 const handleActivityCreated = () => {
-  showCreationModal.value = false;
-  refreshActivities();
+  console.log("Parent received activityCreated event!");
+  showCreationModal.value = false; // This closes the modal
+  refreshActivities(); // This updates the feed
+
+  if (showToast) {
+    showToast.success("Broadcast Live! 📡");
+  }
 };
+
+const backendUrl = config.public.apiBaseUrl.replace("/api/v1", "");
+const getFullAvatarUrl = (path) =>
+  !path ? undefined : path.startsWith("http") ? path : `${backendUrl}${path}`;
 </script>
 
 <template>
-  <div class="dashboard-root min-h-screen relative overflow-hidden">
-    <!-- Background -->
+  <div class="dashboard-root min-h-screen relative">
     <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
       <div
         v-for="dot in dotPositions"
@@ -114,138 +131,134 @@ const handleActivityCreated = () => {
       ></div>
     </div>
 
-    <div
-      v-for="ripple in ripples"
-      :key="ripple.id"
-      class="ripple-effect absolute rounded-full mix-blend-overlay filter blur-sm z-50"
-      :style="ripple.style"
-    ></div>
-
-    <div class="relative z-10 max-w-6xl mx-auto px-4 py-8">
-      <!-- Header -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 py-8">
       <header
-        class="glass-panel sticky top-6 z-40 flex items-center justify-between p-4 px-8 mb-12 shadow-2xl"
+        class="glass-panel sticky top-6 z-50 p-2 shadow-2xl overflow-hidden"
       >
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-white/20 rounded-xl">
-            <span class="text-2xl">🌊</span>
-          </div>
-          <h1 class="text-2xl font-black text-white tracking-tighter">
-            FLUID<span class="text-pink-300">FEED</span>
-          </h1>
-        </div>
+        <div
+          class="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 transition-all duration-150"
+          :style="{ width: scrollPercent + '%' }"
+        ></div>
 
-        <div class="flex items-center gap-6">
-          <button
-            @click.stop="openCreationModal"
-            class="bg-white text-indigo-600 px-6 py-2.5 rounded-full font-bold shadow-xl transition-all hover:scale-105 active:scale-95"
-          >
-            + Post Activity
-          </button>
-
-          <NuxtLink to="/profile" class="rounded-full overflow-hidden">
-            <img
-              :src="getFullAvatarUrl(userData.profileImageUrl)"
-              class="w-12 h-12 rounded-full object-cover border-4 border-white/20 shadow-2xl"
-            />
-          </NuxtLink>
-        </div>
-      </header>
-
-      <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Left -->
-        <section class="lg:col-span-4 space-y-6">
-          <div class="glass-panel p-8">
-            <h2 class="text-3xl font-bold text-white mb-2">
-              Hello, {{ userData.name || "User" }}!
-            </h2>
-            <p class="text-white/70">
-              There are
-              <span class="text-pink-300 font-bold">
-                {{ activities?.data?.length || 0 }}
-              </span>
-              activities waiting for you.
-            </p>
-          </div>
-        </section>
-
-        <!-- Feed -->
-        <section class="lg:col-span-8">
-          <div class="glass-panel p-4 mb-8 flex flex-col md:flex-row gap-4">
-            <input
-              v-model="searchQuery"
-              placeholder="Search activities..."
-              class="flex-1 bg-white/10 border border-white/20 rounded-full py-2 px-6 text-white"
-            />
-
-            <div class="flex bg-white/5 p-1 rounded-full">
-              <button
-                @click="activeFilter = 'all'"
-                :class="activeFilter === 'all'
-                  ? 'bg-pink-300 text-indigo-900'
-                  : 'text-white'"
-                class="px-4 py-1.5 rounded-full text-xs font-bold"
-              >
-                All
-              </button>
-              <button
-                @click="activeFilter = 'joined'"
-                :class="activeFilter === 'joined'
-                  ? 'bg-pink-300 text-indigo-900'
-                  : 'text-white'"
-                class="px-4 py-1.5 rounded-full text-xs font-bold"
-              >
-                Joined
-              </button>
-              <button
-                @click="activeFilter = 'not_joined'"
-                :class="activeFilter === 'not_joined'
-                  ? 'bg-pink-300 text-indigo-900'
-                  : 'text-white'"
-                class="px-4 py-1.5 rounded-full text-xs font-bold"
-              >
-                Not Joined
-              </button>
+        <div class="flex items-center justify-between gap-4 px-4 py-1">
+          <div class="flex items-center gap-3 min-w-fit">
+            <div class="p-2 bg-white/10 rounded-xl">
+              <span class="text-xl">🌊</span>
             </div>
+            <h1
+              class="hidden md:block text-xl font-black text-white tracking-tighter italic uppercase"
+            >
+              FLUID<span class="text-pink-400">FEED</span>
+            </h1>
           </div>
 
-          <div class="space-y-6">
-            <div v-if="loading" class="text-center py-20">
-              <div
-                class="w-12 h-12 border-4 border-white/20 border-t-pink-300 rounded-full animate-spin mx-auto mb-4"
-              ></div>
-              <p class="text-white/60">Loading activities…</p>
+          <div class="flex-1 flex items-center gap-3 max-w-2xl">
+            <div class="relative flex-1 group">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 opacity-20 text-white"
+                >🔍</span
+              >
+              <input
+                v-model="searchQuery"
+                placeholder="Search transmission..."
+                class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-10 text-xs text-white focus:bg-white/10 focus:outline-none transition-all focus:border-pink-500/50"
+              />
             </div>
 
             <div
-              v-else-if="error"
-              class="glass-panel p-8 text-center text-red-300"
+              class="hidden sm:flex bg-black/40 p-1 rounded-xl border border-white/5"
             >
-              {{ error.message }}
+              <button
+                v-for="f in ['all', 'joined', 'not_joined']"
+                :key="f"
+                @click="activeFilter = f"
+                :class="
+                  activeFilter === f
+                    ? 'bg-white text-indigo-900 shadow-lg scale-105'
+                    : 'text-white/40 hover:text-white'
+                "
+                class="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+              >
+                {{ f.replace("_", " ") }}
+              </button>
             </div>
+          </div>
 
+          <div class="flex items-center gap-4">
+            <button
+              @click="showCreationModal = true"
+              class="hidden lg:block bg-pink-500 text-white px-5 py-2.5 rounded-xl font-black shadow-lg hover:scale-105 active:scale-95 uppercase text-[10px] tracking-widest transition-all"
+            >
+              + Post
+            </button>
+            <NuxtLink to="/profile">
+              <img
+                :src="getFullAvatarUrl(userData.profileImageUrl)"
+                class="w-10 h-10 rounded-xl object-cover border border-white/20 shadow-xl hover:border-pink-500 transition-colors"
+              />
+            </NuxtLink>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-12">
+        <aside class="lg:col-span-3 lg:sticky lg:top-32 space-y-4">
+          <div class="glass-panel p-6 border-l-4 border-pink-500">
+            <p
+              class="text-[9px] font-black uppercase text-pink-400 tracking-[0.2em] mb-1"
+            >
+              Commander
+            </p>
+            <h2 class="text-2xl font-black text-white truncate">
+              {{ userData.name || "Explorer" }}
+            </h2>
+          </div>
+        </aside>
+
+        <section class="lg:col-span-9 space-y-8">
+          <div v-if="loading" class="py-20 flex flex-col items-center">
+            <div
+              class="w-12 h-12 border-2 border-white/10 border-t-pink-500 rounded-full animate-spin"
+            ></div>
+            <p
+              class="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 italic"
+            >
+              Decrypting...
+            </p>
+          </div>
+
+          <div v-else class="space-y-12">
             <ActivityPost
               v-for="activity in activities?.data"
               :key="activity.id"
               v-bind="activity"
-              :owner_id="activity.owner_id"
-              :UserHasJoined="!!activity.UserHasJoined"
               @refresh-feed="refreshActivities"
             />
-
-            <!-- FIX #3: correct empty state -->
-            <div
-              v-if="!loading && activities?.data?.length === 0"
-              class="glass-panel p-20 text-center opacity-60"
-            >
-              <p class="text-4xl mb-4">🏜️</p>
-              <p class="text-white">
-                The feed is quiet… create the first spark!
-              </p>
-            </div>
           </div>
         </section>
       </main>
+
+      <Transition name="fade-pop">
+        <button
+          v-if="showBackToTop"
+          @click="scrollToTop"
+          class="fixed bottom-10 right-10 z-50 p-4 bg-pink-500 text-white rounded-2xl shadow-2xl hover:scale-110 active:scale-95 transition-all"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="3"
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
+        </button>
+      </Transition>
 
       <Teleport to="body">
         <ActivityCreationModal
@@ -260,40 +273,26 @@ const handleActivityCreated = () => {
 
 <style scoped>
 .dashboard-root {
-  background: linear-gradient(135deg, #38a6f5 0%, #312e81 50%, #1e1b4b 100%);
+  background: radial-gradient(circle at top right, #1e1b4b, #020617);
   background-attachment: fixed;
 }
-
 .glass-panel {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
 }
 
-.polka-dot {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
-  animation: move-background 18s infinite alternate ease-in-out;
+/* Back to Top Animation */
+.fade-pop-enter-active,
+.fade-pop-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.fade-pop-enter-from,
+.fade-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.5) translateY(20px);
 }
 
-@keyframes move-background {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, -20px) scale(1.1); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-.ripple-effect {
-  width: 20px;
-  height: 20px;
-  background: white;
-  animation: ripple-grow 1.5s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes ripple-grow {
-  from { transform: scale(0.1); opacity: 0.5; }
-  to { transform: scale(25); opacity: 0; }
-}
+/* Polka dot background animation omitted for length, keep your existing one! */
 </style>
