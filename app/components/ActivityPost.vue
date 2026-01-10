@@ -66,17 +66,25 @@ const handleMouseMove = (e) => {
 // --- Countdown ---
 const now = ref(new Date());
 let timer = null;
+
 const countdownText = computed(() => {
-  const target = new Date(props.DateTime);
-  const diff = target - now.value;
+  if (!props.DateTime) return "TBD"; // Guard clause
+  
+  const target = new Date(props.DateTime).getTime();
+  const currentTime = now.value.getTime();
+  const diff = target - currentTime;
+
   if (diff <= 0) return "Happening Now";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const day = Math.floor(hours / 24);
-  if (day > 0) return `${day}d ${hours % 24}h left`;
-  const mins = Math.floor((diff / (1000 * 60)) % 60);
-  return hours > 0
-    ? `${hours}h ${mins}m left`
-    : `${Math.floor((diff / 1000) % 60)}s left`;
+
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h left`;
+  if (hours > 0) return `${hours}h ${mins}m left`;
+  return `${mins}m ${secs}s left`;
 });
 
 onMounted(() => {
@@ -219,7 +227,12 @@ const formatDateTime = (iso) =>
 
       <div v-if="Activity_img" class="relative h-64 w-full overflow-hidden">
         <img
-          :src="getFullUrl(Activity_img)"
+          :src="
+            getFullUrl(Activity_img)
+              ? getFullUrl(Activity_img)
+              : Name.charAt(0).toUpperCase()
+          "
+          @error="(e) => e.target.src = '../assets/default-avatar.png'"
           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div class="glass-gradient-overlay"></div>
