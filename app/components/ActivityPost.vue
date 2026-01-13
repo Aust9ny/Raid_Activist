@@ -20,7 +20,7 @@ const props = defineProps({
   UserHasJoined: [Boolean, Number],
 });
 const emit = defineEmits(["refresh-feed"]);
-
+const followed = ref(false);
 // --- State ---
 const auth = useAuth();
 const config = useRuntimeConfig();
@@ -51,6 +51,17 @@ const rotateX = ref(0);
 const rotateY = ref(0);
 const glowX = ref(0);
 const glowY = ref(0);
+
+const handleReceiveNotice = async () =>{
+  try{
+    const data = await useApiFetch(`/activities/${props.id}/interest`,{
+      method: "POST",
+    });
+    followed.value = true;
+  }catch (err){
+    console.error(err);
+  }
+}
 
 const handleMouseMove = (e) => {
   if (!cardRef.value) return;
@@ -159,6 +170,10 @@ const submitComment = async () => {
     isSubmitting.value = false;
   }
 };
+
+const toggleInterest = async () =>{
+  
+}
 
 const toggleJoin = async () => {
   if (isJoining.value) return;
@@ -294,6 +309,10 @@ const formatDateTime = (iso) =>
                 class="w-full text-left px-5 py-4 text-[10px] font-black text-pink-400 hover:bg-pink-500 hover:text-white flex items-center gap-3 transition-all rounded-2xl"
               >
                 <span>🎲</span> OPEN RAFFLE
+              </button>
+              <button class="w-full text-left px-5 py-4 text-[11px] font-black text-pink-400 hover:bg-pink-500 hover:text:white flex items-center gap-3 transition-all rounded-2xl">
+                <span v-if="followed===true">I will receive notice</span>
+                <span v-else>I will not receive notice</span>
               </button>
             </div>
           </div>

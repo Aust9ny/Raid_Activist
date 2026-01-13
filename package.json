@@ -26,6 +26,7 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@iconify-json/material-symbols": "^1.2.51",
     "@primevue/nuxt-module": "^4.5.3",
     "@types/node": "^25.0.2"
   }
