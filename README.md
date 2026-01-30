@@ -1,75 +1,57 @@
-# Nuxt Minimal Starter
+# 🛡️ Raid Activist
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+**Raid Activist** is a community-driven web application designed to help people organize, discover, and join local or online activities. Whether it's a sports match, a gaming session, or a volunteer event, Raid Activist makes "raiding" real-world activities seamless.
 
-## Setup
+---
 
-Make sure to install dependencies:
+## 🚀 Features
 
-```bash
-# npm
-npm install
+* **Dynamic Activity Feed:** Filter and search for "raids" (activities) based on your interests.
+* **Interactive Activity Cards:** Real-time countdowns for event starts, plus easy "Join/Leave" functionality.
+* **Raffle System:** An integrated raffle modal to fairly select participants when slots are limited.
+* **Engagement:** Full comment sections on every activity to coordinate details.
+* **User Profiles:** Showcase your past activities and participation history.
 
-# pnpm
-pnpm install
+---
 
-# yarn
-yarn install
+## 🛠️ Tech Stack
 
-# bun
-bun install
-```
+* **Frontend:** [Nuxt.js 3](https://nuxt.com/) (Vue.js Framework)
+* **Database:** PostgreSQL (Relational integrity for participants and activities)
 
-## Development Server
+---
 
-Start the development server on `http://localhost:3000`:
+## 📊 Database Architecture
 
-```bash
-# npm
-npm run dev
+The project utilizes a relational schema to handle complex interactions:
 
-# pnpm
-pnpm dev
+* **Users:** Profiles and authentication.
+* **Activities:** The core event data.
+* **Activity_Participants:** A junction table managing the many-to-many relationship between users and events.
 
-# yarn
-yarn dev
+* **Comments & Statuses:** Managing real-time feedback and event lifecycle.
 
-# bun
-bun run dev
-```
+---
 
-## Production
+## 🧠 Technical Challenges & Lessons Learned
 
-Build the application for production:
+During the development of Raid Activist, I tackled several core engineering concepts:
 
-```bash
-# npm
-npm run build
+* **Logic Waterfall Implementation:** Refactored complex scoring and grading logic from "gapped" ranges to a waterfall structure, ensuring 100% accuracy for decimal values and boundary cases.
 
-# pnpm
-pnpm build
+* **String Reconstruction Pattern:** Solved UI formatting issues by mastering string immutability in JavaScript—moving from attempting direct mutations to using `.slice()` and concatenation for cleaner data handling.
+* **Type Safety Advocacy:** Identified "silent bugs" caused by type mismatches in JavaScript, which led me to explore **Rust** for building more predictable and memory-safe backend services.
 
-# yarn
-yarn build
+---
 
-# bun
-bun run build
-```
+## 🏗️ Getting Started
 
-Locally preview production build:
+### Prerequisites
+* **Node.js** (v18.x or later)
+* **npm** or **yarn**
 
-```bash
-# npm
-npm run preview
+### Installation
 
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+1. **Clone the repo:**
+   ```bash
+   git clone [https://github.com/your-username/raid-activist.git](https://github.com/your-username/raid-activist.git)
