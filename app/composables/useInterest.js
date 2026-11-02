@@ -1,13 +1,10 @@
-import { baseURL } from "node:process";
-
-export default interestedList = () =>{
+export const useInterest = () => {
     // Implement interested activities to track activitiy's events
     const auth = useAuth();
     const interested = useState('interestedList', () => []);
 
     const fetchInterested = async () =>{
         if (!auth.token) return;
-        baseURL = process.env.API_BASE_URL;
         const data = await useApiFetch('/users/me/interests',{
             headers : {
                 Authorization : `Bearer ${auth.token}`
@@ -19,8 +16,7 @@ export default interestedList = () =>{
 
     const addInterest = async (activityId) =>{
         if (!auth.token) return;
-        baseURL = process.env.API_BASE_URL;
-        const data = await useApiFetch(`/users/me/interests/${activityId}`,{
+        await useApiFetch(`/users/me/interests/${activityId}`,{
             method : 'POST',
             headers : {
                 Authorization : `Bearer ${auth.token}`
@@ -33,8 +29,7 @@ export default interestedList = () =>{
 
     const removeInterest = async (activityId) =>{
         if (!auth.token) return;
-        baseURL = process.env.API_BASE_URL;
-        const data = await useApiFetch(`/users/me/interests/${activityId}`,{
+        await useApiFetch(`/users/me/interests/${activityId}`,{
             method : 'DELETE',
             headers : {
                 Authorization : `Bearer ${auth.token}`
@@ -49,5 +44,8 @@ export default interestedList = () =>{
         interestedList : interested,
         fetchInterested,
         addInterest,
+        removeInterest,
     }
 }
+
+export default useInterest;

@@ -18,14 +18,15 @@ const iconColors = {
 <template>
   <Teleport to="body">
     <Transition name="toast-pop">
-      <div v-if="isVisible" 
+      <div
+v-if="isVisible" 
         class="fixed top-8 right-8 z-[200] flex items-center min-w-[320px] p-1 rounded-[1.5rem] border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
         :class="themeClasses[type]"
       >
         <div class="flex items-center w-full px-5 py-4 bg-white/5 rounded-[1.25rem]">
           
           <div class="relative flex items-center justify-center w-10 h-10 mr-4 rounded-xl bg-white/10 shadow-inner">
-            <span class="absolute inset-0 rounded-xl animate-ping opacity-20" :class="iconColors[type]"></span>
+            <span class="absolute inset-0 rounded-xl animate-ping opacity-20" :class="iconColors[type]"/>
             <span class="text-xl relative z-10">
               <span v-if="type === 'success'">⚡</span>
               <span v-else-if="type === 'error'">⚠️</span>
@@ -39,7 +40,7 @@ const iconColors = {
           </div>
 
           <div class="ml-4 h-full flex items-center">
-            <div class="w-1 h-8 bg-white/10 rounded-full"></div>
+            <div class="w-1 h-8 bg-white/10 rounded-full"/>
           </div>
         </div>
       </div>

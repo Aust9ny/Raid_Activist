@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { useApiFetch } from "~/composables/useApiFetch";
 
 const emit = defineEmits(["close", "activityCreated"]);
@@ -58,7 +58,7 @@ const handleSubmit = async () => {
     });
     emit("activityCreated", response.activityId);
     emit("close");
-  } catch (error) {
+  } catch {
     triggerShake();
     postError.value = "Post failed. Try again.";
   } finally { isPosting.value = false; }
@@ -89,7 +89,7 @@ const minDateTime = new Date().toISOString().slice(0, 16);
         <div 
           class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           :style="{ background: `radial-gradient(800px circle at ${glowX}px ${glowY}px, rgba(236, 72, 153, 0.1), transparent 40%)` }"
-        ></div>
+        />
 
         <div class="mb-8 relative z-10">
           <h3 class="text-3xl font-black text-white tracking-tight flex items-center gap-3">
@@ -101,30 +101,30 @@ const minDateTime = new Date().toISOString().slice(0, 16);
           <p class="text-slate-400 mt-2 text-sm font-medium uppercase tracking-widest">Broadcast you activity!</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6 relative z-10">
+        <form class="space-y-6 relative z-10" @submit.prevent="handleSubmit">
           <div class="group/input">
             <label class="input-label">Activity Title</label>
-            <input v-model="form.ArticleTitle" type="text" class="input-premium" required />
+            <input v-model="form.ArticleTitle" type="text" class="input-premium" required >
           </div>
 
           <div class="group/input">
             <label class="input-label">Objective</label>
-            <textarea v-model="form.ArticleContent" rows="4" class="input-premium resize-none" required></textarea>
+            <textarea v-model="form.ArticleContent" rows="4" class="input-premium resize-none" required/>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="group/input">
               <label class="input-label">Schedule</label>
-              <input v-model="form.DateTime" type="datetime-local" :min="minDateTime" class="input-premium" required />
+              <input v-model="form.DateTime" type="datetime-local" :min="minDateTime" class="input-premium" required >
             </div>
             <div class="group/input">
               <label class="input-label">Location</label>
-              <input v-model="form.Location" type="text" class="input-premium" required />
+              <input v-model="form.Location" type="text" class="input-premium" required >
             </div>
           </div>
 
           <div class="pt-6 flex items-center justify-end gap-4">
-            <button type="button" @click="emit('close')" class="cancel-btn">Cancel</button>
+            <button type="button" class="cancel-btn" @click="emit('close')">Cancel</button>
             <button type="submit" :disabled="!isFormValid" class="create-btn">
               {{ isPosting ? 'Posting...' : 'Launch Activity 🚀' }}
             </button>

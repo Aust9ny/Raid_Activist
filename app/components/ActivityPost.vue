@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, Teleport } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useApiFetch } from "~/composables/useApiFetch";
 import { useAuth } from "~/stores/Auth";
 
@@ -19,7 +19,8 @@ const props = defineProps({
   CommentCount: Number,
   UserHasJoined: [Boolean, Number],
 });
-const emit = defineEmits(["refresh-feed"]);
+// const emit = defineEmits(["refresh-feed"]);
+defineEmits(["refresh-feed"]);
 const followed = ref(false);
 // --- State ---
 const auth = useAuth();
@@ -52,16 +53,16 @@ const rotateY = ref(0);
 const glowX = ref(0);
 const glowY = ref(0);
 
-const handleReceiveNotice = async () =>{
-  try{
-    const data = await useApiFetch(`/activities/${props.id}/interest`,{
-      method: "POST",
-    });
-    followed.value = true;
-  }catch (err){
-    console.error(err);
-  }
-}
+// const handleReceiveNotice = async () =>{
+//   try{
+//     await useApiFetch(`/activities/${props.id}/interest`,{
+//       method: "POST",
+//     });
+//     followed.value = true;
+//   }catch (err){
+//     console.error(err);
+//   }
+// }
 
 const handleMouseMove = (e) => {
   if (!cardRef.value) return;
@@ -171,9 +172,9 @@ const submitComment = async () => {
   }
 };
 
-const toggleInterest = async () =>{
-  
-}
+// const toggleInterest = async () =>{
+//   
+// }
 
 const toggleJoin = async () => {
   if (isJoining.value) return;
@@ -185,7 +186,7 @@ const toggleJoin = async () => {
     await useApiFetch(`/activities/${props.id}/join`, {
       method: userIsJoined.value ? "POST" : "DELETE",
     });
-  } catch (err) {
+  } catch {
     userIsJoined.value = previous;
     liveAttendingCount.value += previous ? 1 : -1;
   } finally {
@@ -238,7 +239,7 @@ const formatDateTime = (iso) =>
         :style="{
           background: `radial-gradient(600px circle at ${glowX}px ${glowY}px, rgba(236, 72, 153, 0.15), transparent 40%)`,
         }"
-      ></div>
+      />
 
       <div v-if="Activity_img" class="relative h-64 w-full overflow-hidden">
         <img
@@ -247,14 +248,14 @@ const formatDateTime = (iso) =>
               ? getFullUrl(Activity_img)
               : Name.charAt(0).toUpperCase()
           "
-          @error="(e) => e.target.src = '../assets/default-avatar.png'"
           class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        <div class="glass-gradient-overlay"></div>
+          @error="(e) => e.target.src = '../assets/default-avatar.png'"
+        >
+        <div class="glass-gradient-overlay"/>
         <div
           class="absolute top-4 left-4 bg-pink-500/90 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black text-white uppercase tracking-widest shadow-xl flex items-center gap-2"
         >
-          <span class="pulse-dot"></span>
+          <span class="pulse-dot"/>
           {{ countdownText }}
         </div>
       </div>
@@ -266,10 +267,10 @@ const formatDateTime = (iso) =>
               <img
                 :src="getFullUrl(avatar_url)"
                 class="w-12 h-12 rounded-2xl border-2 border-white/10 object-cover shadow-2xl transition-transform group-hover/avatar:scale-110"
-              />
+              >
               <div
                 class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"
-              ></div>
+              />
             </div>
             <div>
               <h2
@@ -285,10 +286,10 @@ const formatDateTime = (iso) =>
             </div>
           </div>
 
-          <div class="relative" ref="optionsMenuRef">
+          <div ref="optionsMenuRef" class="relative">
             <button
-              @click="showOptionsMenu = !showOptionsMenu"
               class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all"
+              @click="showOptionsMenu = !showOptionsMenu"
             >
               <svg
                 class="w-5 h-5 text-white/60"
@@ -305,8 +306,8 @@ const formatDateTime = (iso) =>
               class="absolute right-0 mt-3 w-48 glass-panel-dark z-50 animate-in fade-in slide-in-from-top-2"
             >
               <button
-                @click="openRaffle"
                 class="w-full text-left px-5 py-4 text-[10px] font-black text-pink-400 hover:bg-pink-500 hover:text-white flex items-center gap-3 transition-all rounded-2xl"
+                @click="openRaffle"
               >
                 <span>🎲</span> OPEN RAFFLE
               </button>
@@ -348,7 +349,7 @@ const formatDateTime = (iso) =>
               >
               <span class="stat-label">Going</span>
             </button>
-            <button @click="handleToggleComments" class="stat-btn group/stat">
+            <button class="stat-btn group/stat" @click="handleToggleComments">
               <span
                 class="stat-number text-indigo-400 group-hover/stat:scale-110"
                 >{{ liveCommentCount }}</span
@@ -359,10 +360,10 @@ const formatDateTime = (iso) =>
 
           <button
             v-if="Number(auth.user?.userId) !== Number(owner_id)"
-            @click="toggleJoin"
             :disabled="isJoining"
             class="join-btn"
             :class="{ joined: userIsJoined }"
+            @click="toggleJoin"
           >
             {{ userIsJoined ? "LEAVE" : "JOIN NOW" }}
           </button>
@@ -381,7 +382,7 @@ const formatDateTime = (iso) =>
               </h4>
               <div
                 class="h-[1px] flex-1 mx-4 bg-gradient-to-r from-indigo-500/50 to-transparent"
-              ></div>
+              />
             </div>
 
             <div
@@ -395,7 +396,7 @@ const formatDateTime = (iso) =>
                 <img
                   :src="getFullUrl(comment.avatar_url)"
                   class="w-9 h-9 rounded-xl border border-white/10 object-cover shadow-lg"
-                />
+                >
                 <div
                   class="flex-1 glass-panel-dark p-4 group-hover/msg:border-pink-500/30 transition-colors"
                 >
@@ -422,13 +423,13 @@ const formatDateTime = (iso) =>
                 v-model="newCommentText"
                 placeholder="Send a transmission..."
                 rows="1"
-                @keydown.enter.prevent="submitComment"
                 class="comment-input"
-              ></textarea>
+                @keydown.enter.prevent="submitComment"
+              />
               <button
-                @click="submitComment"
                 :disabled="!newCommentText.trim() || isSubmitting"
                 class="send-btn"
+                @click="submitComment"
               >
                 <span v-if="!isSubmitting" class="flex items-center gap-2">
                   SEND <span class="text-xs">📡</span>
@@ -436,7 +437,7 @@ const formatDateTime = (iso) =>
                 <div
                   v-else
                   class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                ></div>
+                />
               </button>
             </div>
           </div>
@@ -447,15 +448,15 @@ const formatDateTime = (iso) =>
     <Teleport to="body">
       <AttendeesModal
         v-if="showAttendeesModal"
-        :allAttendees="attendees"
-        :raffleAttendees="raffleAttendees"
-        :activityTitle="ArticleTitle"
+        :all-attendees="attendees"
+        :raffle-attendees="raffleAttendees"
+        :activity-title="ArticleTitle"
         @close="showAttendeesModal = false"
       />
       <ActivityRaffleModal
         v-if="showRaffleModal"
         :attendees="raffleAttendees"
-        :activityTitle="ArticleTitle"
+        :activity-title="ArticleTitle"
         @close="showRaffleModal = false"
       />
     </Teleport>

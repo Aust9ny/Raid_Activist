@@ -42,13 +42,13 @@ const goToSignup = () => navigateTo("/register");
           animationDelay: dot.delay + 's',
           opacity: 0.3,
         }"
-      ></div>
+      />
       <div
         v-for="ripple in ripples"
         :key="ripple.id"
         class="ripple-effect absolute rounded-full mix-blend-overlay filter blur-sm z-50"
         :style="ripple.style"
-      ></div>
+      />
     </div>
 
     <header
@@ -71,14 +71,14 @@ const goToSignup = () => navigateTo("/register");
         class="flex items-center gap-8 glass-panel p-2 px-6 border-white/10 shadow-2xl"
       >
         <button
-          @click="goToLogin"
           class="text-[10px] text-white/50 hover:text-white transition font-black uppercase tracking-[0.2em]"
+          @click="goToLogin"
         >
           Access
         </button>
         <button
-          @click="goToSignup"
           class="px-6 py-2 bg-white text-indigo-950 text-[10px] font-black rounded-xl shadow-xl hover:scale-105 transition active:scale-95 uppercase tracking-widest"
+          @click="goToSignup"
         >
           Initialize Identity
         </button>
@@ -95,10 +95,10 @@ const goToSignup = () => navigateTo("/register");
           <span class="relative flex h-2 w-2">
             <span
               class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-            ></span>
+            />
             <span
               class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
-            ></span>
+            />
           </span>
           <span
             class="text-[10px] font-black text-white/60 uppercase tracking-[0.3em]"
@@ -109,7 +109,7 @@ const goToSignup = () => navigateTo("/register");
         <h1
           class="text-7xl md:text-9xl font-black text-white tracking-tighter leading-[0.85] uppercase italic"
         >
-          Dive into <br />
+          Dive into <br >
           <span
             class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400"
             >Experiences.</span
@@ -128,18 +128,18 @@ const goToSignup = () => navigateTo("/register");
           class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6"
         >
           <button
-            @click="goToSignup"
             class="group relative px-12 py-5 font-black text-xs bg-pink-500 text-white rounded-2xl shadow-[0_20px_40px_rgba(236,72,153,0.3)] hover:bg-pink-400 transition transform hover:scale-105 active:scale-95 uppercase tracking-[0.3em] overflow-hidden"
+            @click="goToSignup"
           >
             <span class="relative z-10">Join the Movement</span>
             <div
               class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[scan_2s_infinite]"
-            ></div>
+            />
           </button>
 
           <button
-            @click="goToLogin"
             class="px-10 py-5 font-black text-xs bg-white/5 text-white border border-white/10 rounded-2xl hover:bg-white/10 transition uppercase tracking-[0.3em]"
+            @click="goToLogin"
           >
             View Transmission
           </button>

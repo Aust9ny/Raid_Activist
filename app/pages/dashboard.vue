@@ -5,16 +5,13 @@ import {
   onMounted,
   onUnmounted,
   watch,
-  Teleport,
-  nextTick,
 } from "vue";
 import { useActivities } from "~/composables/useActivities";
 import { useAnimatedBackground } from "~/composables/useAnimatedBackground";
 import { useApiFetch } from "~/composables/useApiFetch";
-import { useAuth } from "~/stores/Auth";
 
 
-const auth = useAuth();
+// const auth = useAuth();
 const config = useRuntimeConfig();
 const showToast = useToast();
 
@@ -98,7 +95,7 @@ const fetchMore = async () => {
 const showNotifications = ref(false);
 const notifications = ref([]);
 const unreadCount = ref(0);
-const isNotifLoading = ref(false);
+// const isNotifLoading = ref(false);
 
 const fetchNotifications = async () => {
   try {
@@ -224,7 +221,7 @@ const getFullAvatarUrl = (path) =>
           animationDelay: dot.delay + 's',
           opacity: 0.4,
         }"
-      ></div>
+      />
     </div>
 
     <div class="relative z-10 max-w-7xl mx-auto px-4 py-8">
@@ -234,7 +231,7 @@ const getFullAvatarUrl = (path) =>
         <div
           class="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 transition-all duration-150"
           :style="{ width: scrollPercent + '%' }"
-        ></div>
+        />
 
         <div class="flex items-center justify-between gap-4 px-4 py-1">
           <div class="flex items-center gap-3 min-w-fit">
@@ -258,7 +255,7 @@ const getFullAvatarUrl = (path) =>
                 v-model="searchQuery"
                 placeholder="Search transmission..."
                 class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-10 text-xs text-white focus:bg-white/10 focus:outline-none transition-all focus:border-pink-500/50"
-              />
+              >
             </div>
 
             <div
@@ -267,13 +264,13 @@ const getFullAvatarUrl = (path) =>
               <button
                 v-for="f in ['all', 'joined', 'not_joined']"
                 :key="f"
-                @click="activeFilter = f"
                 :class="
                   activeFilter === f
                     ? 'bg-white text-indigo-900 shadow-lg scale-105'
                     : 'text-white/40 hover:text-white'
                 "
                 class="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                @click="activeFilter = f"
               >
                 {{ f.replace("_", " ") }}
               </button>
@@ -282,17 +279,17 @@ const getFullAvatarUrl = (path) =>
 
           <div class="flex items-center gap-4">
             <button
-              @click="showCreationModal = true"
               class="hidden lg:block bg-pink-500 text-white px-5 py-2.5 rounded-xl font-black shadow-lg hover:scale-105 active:scale-95 uppercase text-[10px] tracking-widest transition-all"
+              @click="showCreationModal = true"
             >
               + Post
             </button>
             <div class="relative">
               <button
-                @click="toggleNotifications"
                 class="relative p-2.5 transition-all group"
+                @click="toggleNotifications"
               >
-              <Icon name = "material-symbols:notifications-sharp" class = "hover:rotate-12 hover:scale-110 block bg-pink-500 size-10 "></Icon>
+              <Icon name = "material-symbols:notifications-sharp" class = "hover:rotate-12 hover:scale-110 block bg-pink-500 size-10 "/>
                 <div
                   v-if="unreadCount > 0"
                   class="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full text-[10px] flex items-center justify-center font-black border-2 border-[#0f172a] animate-pulse"
@@ -350,7 +347,7 @@ const getFullAvatarUrl = (path) =>
                           v-else-if="notice.ActorAvatar"
                           :src="getFullAvatarUrl(notice.ActorAvatar)"
                           class="w-full h-full object-cover"
-                        />
+                        >
                         <span v-else>{{
                           notice.ActorName?.charAt(0) || "?"
                         }}</span>
@@ -359,8 +356,8 @@ const getFullAvatarUrl = (path) =>
                       <div class="flex-1 min-w-0">
                         <p class="text-[11px] text-white/80 leading-snug">
                           <span
-                            class="font-black text-white"
                             v-if="notice.type !== 'START'"
+                            class="font-black text-white"
                             >{{ notice.ActorName }}</span
                           >
                           <span class="mx-1">{{
@@ -387,7 +384,7 @@ const getFullAvatarUrl = (path) =>
               <img
                 :src="getFullAvatarUrl(userData.profileImageUrl)"
                 class="w-10 h-10 rounded-xl object-cover border border-white/20 shadow-xl hover:border-pink-500 transition-colors"
-              />
+              >
             </NuxtLink>
           </div>
         </div>
@@ -414,7 +411,7 @@ const getFullAvatarUrl = (path) =>
           >
             <div
               class="w-12 h-12 border-2 border-white/10 border-t-pink-500 rounded-full animate-spin"
-            ></div>
+            />
             <p
               class="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 italic"
             >
@@ -436,7 +433,7 @@ const getFullAvatarUrl = (path) =>
               <div v-if="isFetchingMore" class="flex flex-col items-center">
                 <div
                   class="w-8 h-8 border-2 border-white/5 border-t-indigo-500 rounded-full animate-spin"
-                ></div>
+                />
                 <p
                   class="mt-4 text-[8px] font-black uppercase tracking-widest text-white/20"
                 >
@@ -447,7 +444,7 @@ const getFullAvatarUrl = (path) =>
                 v-else-if="!activities?.hasMore && activities?.data?.length > 0"
                 class="text-center opacity-20"
               >
-                <div class="h-[1px] w-24 bg-white/20 mx-auto mb-4"></div>
+                <div class="h-[1px] w-24 bg-white/20 mx-auto mb-4"/>
                 <p class="text-[8px] text-pink-500 uppercase tracking-[0.4em]">
                   All activities displayed
                 </p>
@@ -460,8 +457,8 @@ const getFullAvatarUrl = (path) =>
       <Transition name="fade-pop">
         <button
           v-if="showBackToTop"
-          @click="scrollToTop"
           class="fixed bottom-10 right-10 z-50 p-4 bg-pink-500 text-white rounded-2xl shadow-2xl hover:scale-110 active:scale-95 transition-all"
+          @click="scrollToTop"
         >
           <svg
             class="w-6 h-6"
@@ -483,7 +480,7 @@ const getFullAvatarUrl = (path) =>
         <ActivityCreationModal
           v-if="showCreationModal"
           @close="showCreationModal = false"
-          @activityCreated="handleActivityCreated"
+          @activity-created="handleActivityCreated"
         />
       </Teleport>
     </div>

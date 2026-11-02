@@ -1,21 +1,22 @@
-export default NotificationEvent = () =>{
+export const useNotice = () => {
     // Implement notification event to track notices of interested activities
     const auth = useAuth();
 
-    const notices= useState('noticesist', () => []);
-    const fetchNotices = async (interestList) =>{
+    const notices = useState('noticesList', () => []);
+    const fetchNotices = async () => {
         if (!auth.token) return;
-        baseURL = process.env.API_BASE_URL;
         const data = await useApiFetch('/notices',{
             headers : {
                 Authorization : `Bearer ${auth.token}`
             }
         })
-        noticesvalue = data;
-        console.log(noticesvalue)
+        notices.value = data;
+        console.log(notices.value)
     }
     return {
-        noticesists : notices,
+        noticesList: notices,
         fetchNotices,
     }
 }
+
+export default useNotice;

@@ -86,7 +86,7 @@ const joinActivity = () => {
       </div>
       
       <button class="text-gray-400 hover:text-gray-700 p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
       </button>
     </div>
 
@@ -110,7 +110,7 @@ const joinActivity = () => {
 
     </div>
 
-    <hr class="my-5 border-gray-200" />
+    <hr class="my-5 border-gray-200" >
 
     <div class="flex items-center justify-between">
 
@@ -120,13 +120,13 @@ const joinActivity = () => {
 
       <button 
         :disabled="isJoining"
-        @click="joinActivity"
         :class="[
             'px-6 py-2 font-semibold rounded-full shadow-md transition duration-300 ease-in-out',
             isJoining || UserHasJoined 
                 ? 'bg-gray-400 text-white cursor-not-allowed' 
                 : 'bg-indigo-600 text-white hover:bg-indigo-700 transform hover:scale-105'
         ]"
+        @click="joinActivity"
       >
         <span v-if="isJoining">Processing...</span>
         <span v-else-if="UserHasJoined">Joined</span>

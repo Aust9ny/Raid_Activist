@@ -52,7 +52,7 @@ const passwordConstraints = [
   { text: "Contains a number (0-9)", regex: /[0-9]/ },
   {
     text: "Special character (@, #, $)",
-    regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+    regex: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
   },
 ];
 
@@ -103,7 +103,7 @@ onMounted(async () => {
       phone: me.tel || "Not provided",
     };
     settingsForm.value = { ...userData.value };
-  } catch (err) {
+  } catch {
     if (showToast) showToast.error("Identity sync failed");
   } finally {
     isPageLoading.value = false;
@@ -134,7 +134,7 @@ const handleAvatarUpload = async (e) => {
     const res = await api.uploadAvatar(formData);
     userData.value.profileImageUrl = res.avatarUrl;
     if (showToast) showToast.success("Avatar Recalibrated! ⚡");
-  } catch (err) {
+  } catch {
     if (showToast) showToast.error("Upload interrupted");
   }
 };
@@ -179,7 +179,7 @@ const handleLogout = () => {
           width: dot.size,
           height: dot.size,
         }"
-      ></span>
+      />
     </div>
 
     <div
@@ -187,7 +187,7 @@ const handleLogout = () => {
       :key="ripple.id"
       class="ripple-effect absolute rounded-full mix-blend-overlay opacity-40 filter blur-sm z-50"
       :style="ripple.style"
-    ></div>
+    />
 
     <div class="w-full max-w-5xl mx-auto space-y-6 relative z-10">
       <header
@@ -218,24 +218,24 @@ const handleLogout = () => {
         class="flex p-1.5 bg-black/20 backdrop-blur-md rounded-[2rem] border border-white/5 shadow-inner"
       >
         <button
-          @click="activeTab = 'profile'"
           :class="[
             'flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all',
             activeTab === 'profile'
               ? 'bg-white text-indigo-900 shadow-xl scale-[0.98]'
               : 'text-white/40 hover:text-white',
           ]"
+          @click="activeTab = 'profile'"
         >
           Identity
         </button>
         <button
-          @click="activeTab = 'settings'"
           :class="[
             'flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all',
             activeTab === 'settings'
               ? 'bg-white text-indigo-900 shadow-xl scale-[0.98]'
               : 'text-white/40 hover:text-white',
           ]"
+          @click="activeTab = 'settings'"
         >
           Terminal
         </button>
@@ -247,12 +247,12 @@ const handleLogout = () => {
         >
           <div
             class="absolute -top-24 -right-24 w-64 h-64 bg-pink-500/10 rounded-full blur-[100px]"
-          ></div>
+          />
 
           <div v-if="isPageLoading" class="flex flex-col items-center py-20">
             <div
               class="w-16 h-16 border-4 border-white/5 border-t-pink-500 rounded-full animate-spin mb-6"
-            ></div>
+            />
             <p
               class="text-[10px] font-black uppercase tracking-[0.4em] text-white/40"
             >
@@ -268,13 +268,13 @@ const handleLogout = () => {
               <div class="relative group">
                 <div
                   class="absolute inset-0 bg-pink-500 rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity"
-                ></div>
+                />
                 <img
                   :src="
                     avatarPreview || getFullAvatarUrl(userData.profileImageUrl)
                   "
                   class="w-44 h-44 object-cover border-4 border-white/20 shadow-2xl rounded-[3rem] group-hover:rotate-3 transition-transform duration-500"
-                />
+                >
                 <label
                   class="absolute -bottom-2 -right-2 bg-white p-3 rounded-2xl cursor-pointer shadow-xl hover:scale-110 active:scale-90 transition-all"
                 >
@@ -302,7 +302,7 @@ const handleLogout = () => {
                     accept="image/*"
                     class="hidden"
                     @change="handleAvatarUpload"
-                  />
+                  >
                 </label>
               </div>
               <div class="text-center md:text-left">
@@ -317,7 +317,7 @@ const handleLogout = () => {
                   <p class="text-xl font-bold text-pink-400">
                     @{{ userData.username }}
                   </p>
-                  <span class="h-1 w-1 bg-white/20 rounded-full"></span>
+                  <span class="h-1 w-1 bg-white/20 rounded-full"/>
                   <p
                     class="text-[10px] font-black text-white/30 uppercase tracking-widest"
                   >
@@ -334,7 +334,7 @@ const handleLogout = () => {
                 <h3
                   class="text-[10px] font-black uppercase tracking-widest text-pink-400 mb-4 flex items-center gap-2"
                 >
-                  <span class="w-2 h-2 bg-pink-500 rounded-full"></span> Core
+                  <span class="w-2 h-2 bg-pink-500 rounded-full"/> Core
                   Bio
                 </h3>
                 <p
@@ -364,10 +364,10 @@ const handleLogout = () => {
                       Secure Email
                     </p>
                     <button
+                      class="text-[9px] font-black text-pink-500 uppercase tracking-tighter hover:underline"
                       @click="
                         isSensitiveVisibleEmail = !isSensitiveVisibleEmail
                       "
-                      class="text-[9px] font-black text-pink-500 uppercase tracking-tighter hover:underline"
                     >
                       {{ isSensitiveVisibleEmail ? "Encrypt" : "Decrypt" }}
                     </button>
@@ -383,8 +383,8 @@ const handleLogout = () => {
                       Comm Link
                     </p>
                     <button
-                      @click="isSensitiveVisibleTel = !isSensitiveVisibleTel"
                       class="text-[9px] font-black text-pink-500 uppercase tracking-tighter hover:underline"
+                      @click="isSensitiveVisibleTel = !isSensitiveVisibleTel"
                     >
                       {{ isSensitiveVisibleTel ? "Encrypt" : "Decrypt" }}
                     </button>
@@ -396,8 +396,8 @@ const handleLogout = () => {
 
             <div class="pt-8 flex flex-col items-center">
               <button
-                @click="handleLogout"
                 class="group px-12 py-4 rounded-2xl bg-rose-500/10 text-rose-500 font-black text-[10px] tracking-[0.3em] uppercase border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all duration-500"
+                @click="handleLogout"
               >
                 Disconnect Account
               </button>
@@ -407,13 +407,13 @@ const handleLogout = () => {
           <div v-else class="animate-in space-y-16">
             <section class="space-y-8">
               <div class="flex items-center gap-4">
-                <div class="h-px flex-1 bg-white/10"></div>
+                <div class="h-px flex-1 bg-white/10"/>
                 <h3
                   class="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]"
                 >
                   Personal Data
                 </h3>
-                <div class="h-px flex-1 bg-white/10"></div>
+                <div class="h-px flex-1 bg-white/10"/>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -426,7 +426,7 @@ const handleLogout = () => {
                     v-model="settingsForm.name"
                     class="input-glass"
                     placeholder="Enter name..."
-                  />
+                  >
                 </div>
                 <div class="space-y-3">
                   <label
@@ -437,7 +437,7 @@ const handleLogout = () => {
                     v-model="settingsForm.username"
                     class="input-glass"
                     placeholder="Enter username..."
-                  />
+                  >
                 </div>
               </div>
               <div class="space-y-3">
@@ -449,13 +449,13 @@ const handleLogout = () => {
                   v-model="settingsForm.bio"
                   class="input-glass min-h-[120px] resize-none"
                   placeholder="Who are you?"
-                ></textarea>
+                />
               </div>
 
               <div class="flex justify-end">
                 <button
-                  @click="handleSaveChanges"
                   class="px-10 py-4 bg-white text-indigo-900 font-black text-[10px] tracking-widest uppercase rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl"
+                  @click="handleSaveChanges"
                 >
                   Push Changes
                 </button>
@@ -464,13 +464,13 @@ const handleLogout = () => {
 
             <section class="space-y-8">
               <div class="flex items-center gap-4">
-                <div class="h-px flex-1 bg-white/10"></div>
+                <div class="h-px flex-1 bg-white/10"/>
                 <h3
                   class="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]"
                 >
                   Security
                 </h3>
-                <div class="h-px flex-1 bg-white/10"></div>
+                <div class="h-px flex-1 bg-white/10"/>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -485,7 +485,7 @@ const handleLogout = () => {
                       type="password"
                       placeholder="Confirm existing Password"
                       class="input-glass"
-                    />
+                    >
                   </div>
                   <div class="space-y-3">
                     <label
@@ -497,7 +497,7 @@ const handleLogout = () => {
                       type="password"
                       placeholder="Enter new Password"
                       class="input-glass"
-                    />
+                    >
                   </div>
                   <div class="space-y-3">
                     <label
@@ -509,7 +509,7 @@ const handleLogout = () => {
                       type="password"
                       placeholder="Re-enter new Password"
                       class="input-glass"
-                    />
+                    >
                   </div>
                 </div>
 
@@ -583,7 +583,7 @@ const handleLogout = () => {
                             : 'bg-pink-500'
                         "
                         :style="{ width: passwordStrength + '%' }"
-                      ></div>
+                      />
                     </div>
                   </div>
                 </div>

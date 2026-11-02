@@ -47,7 +47,7 @@ const constraints = [
   { text: "Contains a number (0-9)", regex: /[0-9]/ },
   {
     text: "Special character (@, #, $)",
-    regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+    regex: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
   },
 ];
 
@@ -130,13 +130,13 @@ const closeModalAndRedirect = () => {
           animationDelay: dot.delay + 's',
           opacity: 0.2,
         }"
-      ></div>
+      />
       <div
         v-for="ripple in ripples"
         :key="ripple.id"
         class="ripple-effect absolute rounded-full mix-blend-overlay filter blur-sm z-50"
         :style="ripple.style"
-      ></div>
+      />
     </div>
 
     <div class="relative z-10 w-full max-w-lg animate-in">
@@ -156,7 +156,7 @@ const closeModalAndRedirect = () => {
           </p>
         </div>
 
-        <form @submit.prevent="handleRegister" class="space-y-5">
+        <form class="space-y-5" @submit.prevent="handleRegister">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1">
               <label
@@ -171,7 +171,7 @@ const closeModalAndRedirect = () => {
                 :class="{
                   'border-rose-500/50': nickname.length > 0 && !isNicknameValid,
                 }"
-              />
+              >
             </div>
 
             <div class="space-y-1">
@@ -188,7 +188,7 @@ const closeModalAndRedirect = () => {
                 :class="{
                   'border-rose-500/50': phoneNumber.length > 0 && !isPhoneValid,
                 }"
-              />
+              >
             </div>
           </div>
 
@@ -205,7 +205,7 @@ const closeModalAndRedirect = () => {
               :class="{
                 'border-rose-500/50': email.length > 0 && !isEmailValid,
               }"
-            />
+            >
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -220,7 +220,7 @@ const closeModalAndRedirect = () => {
                   type="password"
                   placeholder="••••••••"
                   class="input-glass"
-                />
+                >
               </div>
               <div class="space-y-1">
                 <label
@@ -236,7 +236,7 @@ const closeModalAndRedirect = () => {
                     'border-rose-500/50':
                       passwordConfirm.length > 0 && !doPasswordsMatch,
                   }"
-                />
+                >
               </div>
             </div>
 
@@ -295,7 +295,7 @@ const closeModalAndRedirect = () => {
             >
               <div
                 class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"
-              ></div>
+              />
             </div>
             <span v-else>Construct Profile</span>
           </button>
@@ -315,40 +315,40 @@ const closeModalAndRedirect = () => {
         </div>
       </div>
     </div>
-  </div>
 
-  <Teleport to="body">
-    <Transition name="fade">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 bg-indigo-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4"
-      >
+    <Teleport to="body">
+      <Transition name="fade">
         <div
-          class="glass-panel p-10 max-w-sm text-center border-white/20 animate-in"
+          v-if="showModal"
+          class="fixed inset-0 bg-indigo-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4"
         >
           <div
-            class="w-20 h-20 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-emerald-500/30"
+            class="glass-panel p-10 max-w-sm text-center border-white/20 animate-in"
           >
-            <span class="text-4xl animate-bounce">🌊</span>
+            <div
+              class="w-20 h-20 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-emerald-500/30"
+            >
+              <span class="text-4xl animate-bounce">🌊</span>
+            </div>
+            <h3 class="text-3xl font-black text-white uppercase tracking-tighter">
+              Profile Active
+            </h3>
+            <p
+              class="text-white/60 text-xs mt-3 mb-8 leading-relaxed uppercase tracking-widest font-bold"
+            >
+              Your digital fingerprint has been added to the fluid stream.
+            </p>
+            <button
+              class="w-full py-4 bg-white text-indigo-950 font-black rounded-2xl hover:bg-pink-300 transition-all shadow-xl uppercase text-xs tracking-widest"
+              @click="closeModalAndRedirect"
+            >
+              Enter Transmission
+            </button>
           </div>
-          <h3 class="text-3xl font-black text-white uppercase tracking-tighter">
-            Profile Active
-          </h3>
-          <p
-            class="text-white/60 text-xs mt-3 mb-8 leading-relaxed uppercase tracking-widest font-bold"
-          >
-            Your digital fingerprint has been added to the fluid stream.
-          </p>
-          <button
-            @click="closeModalAndRedirect"
-            class="w-full py-4 bg-white text-indigo-950 font-black rounded-2xl hover:bg-pink-300 transition-all shadow-xl uppercase text-xs tracking-widest"
-          >
-            Enter Transmission
-          </button>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
+      </Transition>
+    </Teleport>
+  </div>
 </template>
 
 <style scoped>

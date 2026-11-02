@@ -83,13 +83,13 @@ const handleLogin = async () => {
           animationDelay: dot.delay + 's',
           opacity: 0.2,
         }"
-      ></div>
+      />
       <div
         v-for="ripple in ripples"
         :key="ripple.id"
         class="ripple-effect absolute rounded-full mix-blend-overlay filter blur-sm z-50"
         :style="ripple.style"
-      ></div>
+      />
     </div>
 
     <div class="relative z-10 w-full max-w-md animate-in">
@@ -132,7 +132,7 @@ const handleLogin = async () => {
           </p>
         </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-6">
+        <form class="space-y-6" @submit.prevent="handleLogin">
           <div class="space-y-1">
             <label
               class="text-[9px] font-black text-pink-300 uppercase ml-4 tracking-widest"
@@ -147,7 +147,7 @@ const handleLogin = async () => {
                 'border-rose-500/50': email.length > 0 && !isEmailValid,
               }"
               required
-            />
+            >
           </div>
 
           <div class="space-y-1">
@@ -158,8 +158,8 @@ const handleLogin = async () => {
               >
               <button
                 type="button"
-                @click="showPassword = !showPassword"
                 class="text-[9px] font-black text-white/20 hover:text-white transition-colors uppercase"
+                @click="showPassword = !showPassword"
               >
                 {{ showPassword ? "Hide" : "Show" }}
               </button>
@@ -170,7 +170,7 @@ const handleLogin = async () => {
               placeholder="••••••••"
               class="input-glass"
               required
-            />
+            >
           </div>
 
           <button
@@ -184,7 +184,7 @@ const handleLogin = async () => {
             >
               <div
                 class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"
-              ></div>
+              />
             </div>
             <span v-else>Authorize Terminal</span>
           </button>

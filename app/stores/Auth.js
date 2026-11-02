@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { useApiFetch } from '~/composables/useApiFetch'
 
 export const useAuth = defineStore('auth', {
   state: () => ({
@@ -33,7 +32,8 @@ export const useAuth = defineStore('auth', {
         return res
       } catch (err) {
         throw new Error(
-          err?.data?.error || 'Invalid email or password'
+          err?.data?.error || 'Invalid email or password',
+          { cause: err }
         )
       }
     },
