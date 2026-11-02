@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     attendees: {
@@ -19,7 +19,7 @@ const props = defineProps({
     }
 });
 const emit = defineEmits(['close']);
-const config = useRuntimeConfig();
+// const config = useRuntimeConfig();
 
 // --- State ---
 const availableAttendees = ref([]); 
@@ -32,13 +32,13 @@ const WINNER_INDEX = ref(null);
 const SEGMENT_COLORS = ['#F9A8D4', '#818CF8', '#4ADE80', '#FCD34D', '#A78BFA', '#2DD4BF', '#FBBF24', '#D8B4FE', '#6EE7B7', '#FECACA']; 
 
 // --- Helper: Get Full Image URL ---
-const getFullUrl = (p) =>
-  p ? (p.startsWith("http") ? p : `${config.public.apiBaseUrl.replace("/api/v1", "")}${p}`) : null;
+// const getFullUrl = (p) =>
+//   p ? (p.startsWith("http") ? p : `${config.public.apiBaseUrl.replace("/api/v1", "")}${p}`) : null;
 
 // --- Helper: Get Initial ---
-const getInitial = (user) => {
-    return user.Fname ? user.Fname.charAt(0).toUpperCase() : '?';
-};
+// const getInitial = (user) => {
+//     return user.Fname ? user.Fname.charAt(0).toUpperCase() : '?';
+// };
 
 // --- Initialization ---
 const shuffleAndAssignColors = (list) => {
@@ -113,24 +113,24 @@ const resetRaffle = () => {
 
 <template>
     <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl" @click="emit('close')"></div>
+        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl" @click="emit('close')"/>
         
         <div v-if="showConfetti" class="absolute inset-0 pointer-events-none z-[110] overflow-hidden">
-            <div v-for="n in 30" :key="n" class="confetti-particle" :style="`--c: ${SEGMENT_COLORS[n % 10]}; left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 2}s`"></div>
+            <div v-for="n in 30" :key="n" class="confetti-particle" :style="`--c: ${SEGMENT_COLORS[n % 10]}; left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 2}s`"/>
         </div>
 
         <div class="relative bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[3.5rem] shadow-[0_0_100px_-20px_rgba(0,0,0,1)] w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-500">
             
             <div class="p-10 pb-0 flex justify-between items-start">
                 <div class="relative">
-                    <div class="absolute -left-4 top-0 w-1 h-12 bg-pink-500 rounded-full blur-sm"></div>
+                    <div class="absolute -left-4 top-0 w-1 h-12 bg-pink-500 rounded-full blur-sm"/>
                     <h3 class="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
                         Raffle <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-400">Draw</span>
                     </h3>
                     <p class="text-[10px] text-white/30 font-black uppercase tracking-[0.4em] mt-3 ml-1">{{ activityTitle }}</p>
                 </div>
-                <button @click="emit('close')" class="close-btn-round">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button class="close-btn-round" @click="emit('close')">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
@@ -138,15 +138,15 @@ const resetRaffle = () => {
                 <div class="relative group">
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-40">
                         <div class="w-6 h-8 bg-white rounded-b-full shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center">
-                            <div class="w-2 h-2 bg-pink-600 rounded-full"></div>
+                            <div class="w-2 h-2 bg-pink-600 rounded-full"/>
                         </div>
                     </div>
 
                     <div class="w-72 h-72 rounded-full border-[12px] border-white/5 relative flex items-center justify-center shadow-2xl">
-                        <div class="w-full h-full rounded-full overflow-hidden" :style="wheelStyle"></div>
+                        <div class="w-full h-full rounded-full overflow-hidden" :style="wheelStyle"/>
                         
-                        <div class="absolute inset-0 rounded-full pointer-events-none bg-gradient-to-tr from-black/40 via-transparent to-white/20 mix-blend-overlay"></div>
-                        <div class="absolute inset-0 rounded-full pointer-events-none ring-1 ring-inset ring-white/20"></div>
+                        <div class="absolute inset-0 rounded-full pointer-events-none bg-gradient-to-tr from-black/40 via-transparent to-white/20 mix-blend-overlay"/>
+                        <div class="absolute inset-0 rounded-full pointer-events-none ring-1 ring-inset ring-white/20"/>
 
                         <div class="absolute w-20 h-20 bg-slate-900 rounded-full border-[6px] border-white/10 z-30 flex flex-col items-center justify-center text-white shadow-2xl">
                             <span class="text-xl font-black italic">{{ availableAttendees.length }}</span>
@@ -159,7 +159,7 @@ const resetRaffle = () => {
                     <div class="result-box">
                         <div v-if="winner && !isSpinning" class="text-center animate-in zoom-in fade-in duration-500">
                              <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span> Access Granted
+                                <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"/> Access Granted
                              </p>
                              <h4 class="text-3xl font-black text-white tracking-tight drop-shadow-lg">{{ winner.Fname }} {{ winner.Lname }}</h4>
                         </div>
@@ -170,11 +170,11 @@ const resetRaffle = () => {
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <button @click="spinRaffle" :disabled="isSpinning || availableAttendees.length === 0" class="spin-btn">
+                        <button :disabled="isSpinning || availableAttendees.length === 0" class="spin-btn" @click="spinRaffle">
                             {{ isSpinning ? 'SPINNING...' : 'INITIALIZE DRAW' }}
                         </button>
-                        <button @click="resetRaffle" class="secondary-btn">Reset</button>
-                        <button @click="emit('close')" class="secondary-btn">Close</button>
+                        <button class="secondary-btn" @click="resetRaffle">Reset</button>
+                        <button class="secondary-btn" @click="emit('close')">Close</button>
                     </div>
                 </div>
             </div>
@@ -182,7 +182,7 @@ const resetRaffle = () => {
             <div class="px-10 pb-10">
                 <div class="flex flex-wrap gap-2 justify-center max-h-28 overflow-y-auto custom-scrollbar p-4 bg-black/20 rounded-[2rem] border border-white/5">
                     <span v-for="attendee in availableAttendees" :key="attendee.user_id" class="attendee-tag">
-                        <div class="w-1.5 h-1.5 rounded-full shadow-[0_0_5px_currentColor]" :style="{ backgroundColor: attendee.segmentColor, color: attendee.segmentColor }"></div>
+                        <div class="w-1.5 h-1.5 rounded-full shadow-[0_0_5px_currentColor]" :style="{ backgroundColor: attendee.segmentColor, color: attendee.segmentColor }"/>
                         {{ attendee.Fname }}
                     </span>
                 </div>

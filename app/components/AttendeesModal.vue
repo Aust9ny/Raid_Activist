@@ -31,7 +31,7 @@ onUnmounted(() => window.removeEventListener("keydown", handleEsc));
 
 <template>
     <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" @click="emit('close')"></div>
+        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" @click="emit('close')"/>
         
         <div class="relative bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-[3rem] shadow-2xl w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
             
@@ -48,12 +48,12 @@ onUnmounted(() => window.removeEventListener("keydown", handleEsc));
 
                 <div class="flex items-center gap-4 w-full md:w-auto">
                     <div class="relative flex-1 md:w-64">
-                        <input v-model="searchQuery" placeholder="Search explorer..." class="search-input" />
+                        <input v-model="searchQuery" placeholder="Search explorer..." class="search-input" >
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 text-xs">🔍</span>
                     </div>
-                    <button @click="emit('close')" class="close-btn group">
+                    <button class="close-btn group" @click="emit('close')">
                         <svg class="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
@@ -73,11 +73,11 @@ onUnmounted(() => window.removeEventListener("keydown", handleEsc));
                     <div class="p-6 bg-white/5 rounded-[2rem] border border-white/5">
                         <p class="text-[9px] font-black text-white/30 uppercase tracking-widest mb-4">Quick Legend</p>
                         <div class="flex items-center gap-3 mb-3">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"/>
                             <span class="text-[10px] text-white/60 font-bold uppercase">Online Now</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]"/>
                             <span class="text-[10px] text-white/60 font-bold uppercase">Qualified</span>
                         </div>
                     </div>
@@ -85,15 +85,16 @@ onUnmounted(() => window.removeEventListener("keydown", handleEsc));
 
                 <div class="lg:col-span-9 p-8 overflow-y-auto custom-scrollbar bg-black/10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div v-for="attendee in filteredAll" :key="attendee.user_id" 
+                        <div
+v-for="attendee in filteredAll" :key="attendee.user_id" 
                             class="attendee-card group"
                             :class="{ 'is-qualified': raffleAttendees.some(r => r.user_id === attendee.user_id) }"
                         >
                             <div class="flex items-center gap-4">
                                 <div class="relative">
-                                    <img v-if="attendee.avatar_url" :src="getFullUrl(attendee.avatar_url)" class="avatar-img" />
+                                    <img v-if="attendee.avatar_url" :src="getFullUrl(attendee.avatar_url)" class="avatar-img" >
                                     <div v-else class="avatar-placeholder">{{ getInitial(attendee) }}</div>
-                                    <div class="online-indicator"></div>
+                                    <div class="online-indicator"/>
                                 </div>
                                 
                                 <div class="flex-1">
@@ -118,7 +119,7 @@ onUnmounted(() => window.removeEventListener("keydown", handleEsc));
             </div>
 
             <div class="p-6 bg-slate-950/50 border-t border-white/5 flex justify-center">
-                <button @click="emit('close')" class="back-btn">
+                <button class="back-btn" @click="emit('close')">
                     Return to Feed
                 </button>
             </div>

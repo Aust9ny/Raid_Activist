@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     '@nuxtjs/google-fonts',
     '@pinia/nuxt',
     '@nuxt/icon',
+    '@nuxt/eslint',
   ],
   css: 
   [

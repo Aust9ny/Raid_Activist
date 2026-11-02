@@ -7,7 +7,9 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@nuxt/icon": "^2.1.1",
@@ -27,7 +29,9 @@
   },
   "devDependencies": {
     "@iconify-json/material-symbols": "^1.2.51",
+    "@nuxt/eslint": "^1.17.0",
     "@primevue/nuxt-module": "^4.5.3",
-    "@types/node": "^25.0.2"
+    "@types/node": "^25.0.2",
+    "eslint": "^10.14.0"
   }
 }
